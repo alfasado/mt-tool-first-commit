@@ -1,0 +1,43 @@
+#!/usr/bin/perl
+package MT::Tool::FirstCommit;
+use strict;
+use warnings;
+use FindBin;
+use lib map File::Spec->catdir($FindBin::Bin, File::Spec->updir, $_), qw/lib extlib/;
+use base qw( MT::Tool );
+
+sub usage { "Save Object's First Revision." }
+
+sub help {
+    return "Save Object's First Revision.\n" .
+         'cd path/to/mt; perl tools/first-commit --blog_id 0 -- model=template' . "\n";
+}
+
+my ( $blog_id, $model );
+
+sub options {
+    return (
+        'blog_id=s' => \$blog_id,
+        'model=s' => \$model,
+    );
+}
+
+sub main {
+    my $class = shift;
+    my ( $verbose ) = $class->SUPER::main( @_ );
+    my $mt = MT->new or die MT->errstr;
+    $blog_id = 0 unless $blog_id;
+    $model = 'template' unless $model;
+    my @objects = MT->model( $model )->load( { blog_id => $blog_id } );
+    for my $obj ( @objects ) {
+        if (! $obj->current_revision ) {
+            $obj->{ changed_revisioned_cols } = $obj->column_names;
+            my $rev = $obj->save_revision( 'first commit.' );
+            $obj->current_revision( $rev );
+            $obj->save or die $obj->errstr;
+        }
+    }
+    1;
+}
+
+__PACKAGE__->main() unless caller;
