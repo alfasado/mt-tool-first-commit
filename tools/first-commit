@@ -28,7 +28,8 @@ sub main {
     my $mt = MT->new or die MT->errstr;
     $blog_id = 0 unless $blog_id;
     $model = 'template' unless $model;
-    my @objects = MT->model( $model )->load( { blog_id => $blog_id } );
+    my @objects = MT->model( $model )->load( { blog_id => $blog_id,
+                                               type => { not => 'buckup' } } );
     for my $obj ( @objects ) {
         if (! $obj->current_revision ) {
             $obj->{ changed_revisioned_cols } = $obj->column_names;
